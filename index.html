@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nutrition Feedback</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green:        #27ae79;
+  --green-hover:  #1f9567;
+  --green-light:  #edf7f2;
+  --green-mid:    #c5e8d8;
+  --amber:        #f59e0b;
+  --amber-light:  #fef3c7;
+  --red-light:    #fee2e2;
+  --red:          #dc2626;
+  --white:        #ffffff;
+  --gray-50:      #f9fafb;
+  --gray-100:     #f3f4f6;
+  --gray-200:     #e5e7eb;
+  --gray-300:     #d1d5db;
+  --gray-400:     #9ca3af;
+  --gray-500:     #6b7280;
+  --gray-600:     #4b5563;
+  --gray-700:     #374151;
+  --gray-900:     #111827;
+  --radius-sm:    8px;
+  --radius:       12px;
+  --radius-lg:    16px;
+  --shadow-xs:    0 1px 2px rgba(0,0,0,.05);
+  --shadow-sm:    0 1px 4px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+  --shadow:       0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:    0 10px 28px rgba(0,0,0,.10), 0 4px 10px rgba(0,0,0,.05);
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ─────────────────────────────────────── */
+.header {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-900);
+  letter-spacing: -.01em;
+}
+.header-logo-dot {
+  width: 22px;
+  height: 22px;
+  background: var(--green);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.header-logo-dot svg { display: block; }
+.header-spacer { flex: 1; }
+.api-pill {
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--gray-100);
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.api-pill .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gray-400);
+  flex-shrink: 0;
+}
+.api-pill.online { background: var(--green-light); color: var(--green-hover); }
+.api-pill.online .dot { background: var(--green); }
+
+/* ── PAGE ───────────────────────────────────────── */
+.page { max-width: 820px; margin: 0 auto; padding: 32px 20px 80px; }
+
+/* ── SECTION TITLE ──────────────────────────────── */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  margin-bottom: 10px;
+}
+
+/* ── UPLOAD CARD ────────────────────────────────── */
+.upload-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 32px;
+}
+.upload-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+.upload-sub {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-bottom: 18px;
+  line-height: 1.55;
+}
+.upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.file-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1.5px dashed var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+  background: none;
+}
+.file-pick:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+#csv-file { display: none; }
+
+#file-name {
+  font-size: 12.5px;
+  color: var(--gray-400);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── BUTTONS ────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background .15s, box-shadow .15s, opacity .15s, transform .1s;
+  font-family: inherit;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+.btn-green {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(39,174,121,.28);
+}
+.btn-green:hover:not(:disabled) { background: var(--green-hover); box-shadow: 0 3px 12px rgba(39,174,121,.35); }
+
+.btn-outline {
+  background: var(--white);
+  color: var(--gray-700);
+  border: 1.5px solid var(--gray-200);
+}
+.btn-outline:hover:not(:disabled) { border-color: var(--green); color: var(--green); background: var(--green-light); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gray-500);
+  padding: 6px 10px;
+}
+.btn-ghost:hover:not(:disabled) { background: var(--gray-100); color: var(--gray-700); }
+
+.btn-xs { padding: 5px 10px; font-size: 12px; }
+
+/* ── FLASH MESSAGES ─────────────────────────────── */
+.flash {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  display: none;
+}
+.flash.show { display: block; }
+.flash.ok  { background: var(--green-light); color: var(--green-hover); }
+.flash.err { background: var(--red-light); color: var(--red); }
+
+.warn-box {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--amber-light);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: #92400e;
+  display: none;
+}
+.warn-box.show { display: block; }
+.warn-box strong { display: block; margin-bottom: 4px; }
+.warn-box ul { padding-left: 16px; }
+.warn-box li { margin-top: 2px; }
+
+/* ── CLIENTS BAR ────────────────────────────────── */
+.clients-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.clients-bar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-900);
+  flex: 1;
+}
+.week-tag {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--amber-light);
+  color: #78350f;
+}
+.count-tag {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+/* ── PROGRESS ───────────────────────────────────── */
+.progress-wrap {
+  height: 3px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  display: none;
+}
+.progress-wrap.show { display: block; }
+.progress-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 2px;
+  transition: width .35s ease;
+  width: 0%;
+}
+
+/* ── CLIENT CARD ────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: box-shadow .2s;
+}
+.card:hover { box-shadow: var(--shadow-sm); }
+.card.done { border-left: 3px solid var(--green); }
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--green-light);
+  color: var(--green-hover);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: .02em;
+}
+
+.card-info { flex: 1; min-width: 0; }
+.card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-email {
+  font-size: 12px;
+  color: var(--gray-400);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.days-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.days-badge.full    { background: var(--green-light);  color: var(--green-hover); }
+.days-badge.partial { background: var(--amber-light);  color: #78350f; }
+
+.status-wrap {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.checkmark {
+  width: 20px; height: 20px;
+  fill: none; stroke: var(--green);
+  stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  display: none;
+}
+.spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid var(--gray-200);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin .65s linear infinite;
+  display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FEEDBACK PANEL ─────────────────────────────── */
+.feedback-panel {
+  border-top: 1px solid var(--gray-100);
+  padding: 14px 16px 16px;
+  display: none;
+}
+.feedback-panel.show { display: block; }
+
+.feedback-text {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--gray-700);
+  white-space: pre-wrap;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.feedback-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.copy-done {
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity .25s;
+}
+.copy-done.show { opacity: 1; }
+
+/* ── EMPTY STATE ────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--gray-400);
+}
+.empty svg { margin-bottom: 14px; opacity: .35; }
+.empty p { font-size: 14px; line-height: 1.6; }
+
+/* ── HIDDEN ─────────────────────────────────────── */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">
+    <div class="header-logo-dot">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+    </div>
+    Nutrition Feedback
+  </div>
+  <div class="header-spacer"></div>
+  <div class="api-pill" id="api-pill">
+    <span class="dot"></span>
+    <span id="api-label">Se conecteaza...</span>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- Upload -->
+  <div class="upload-card">
+    <div class="upload-title">Incarca CSV saptamanal</div>
+    <div class="upload-sub">Exporta raspunsurile din Google Forms si incarca fisierul CSV. Clientii apar automat mai jos.</div>
+    <div class="upload-row">
+      <label class="file-pick" for="csv-file">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Alege fisier
+      </label>
+      <input type="file" id="csv-file" accept=".csv" />
+      <span id="file-name">Niciun fisier selectat</span>
+      <button class="btn btn-green" id="upload-btn" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Incarca
+      </button>
+    </div>
+    <div class="flash" id="upload-flash"></div>
+    <div class="warn-box" id="warn-box">
+      <strong>Atentionari:</strong>
+      <ul id="warn-list"></ul>
+    </div>
+  </div>
+
+  <!-- Clients section -->
+  <div id="clients-section" class="hidden">
+    <div class="clients-bar">
+      <div class="clients-bar-title">Clienti</div>
+      <span class="week-tag hidden" id="week-tag"></span>
+      <span class="count-tag hidden" id="count-tag"></span>
+      <button class="btn btn-ghost btn-xs" id="refresh-btn" title="Reincarca lista">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Reincarca
+      </button>
+      <button class="btn btn-outline" id="gen-all-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Genereaza tot
+      </button>
+    </div>
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div id="client-list"></div>
+  </div>
+
+  <!-- Empty -->
+  <div id="empty-state">
+    <div class="empty">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <p>Niciun CSV incarcat inca.<br>Incarca un fisier de mai sus pentru a vedea clientii.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = 'http://localhost:3001';
+
+// ── state ──────────────────────────────────────────
+let clientsData = [];
+
+// ── elements ───────────────────────────────────────
+const csvFile        = document.getElementById('csv-file');
+const uploadBtn      = document.getElementById('upload-btn');
+const fileNameEl     = document.getElementById('file-name');
+const uploadFlash    = document.getElementById('upload-flash');
+const warnBox        = document.getElementById('warn-box');
+const warnList       = document.getElementById('warn-list');
+const apiPill        = document.getElementById('api-pill');
+const apiLabel       = document.getElementById('api-label');
+const clientsSection = document.getElementById('clients-section');
+const emptyState     = document.getElementById('empty-state');
+const clientList     = document.getElementById('client-list');
+const weekTag        = document.getElementById('week-tag');
+const countTag       = document.getElementById('count-tag');
+const refreshBtn     = document.getElementById('refresh-btn');
+const genAllBtn      = document.getElementById('gen-all-btn');
+const progressWrap   = document.getElementById('progress-wrap');
+const progressFill   = document.getElementById('progress-fill');
+
+// ── health ─────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/health`);
+    const d = await r.json();
+    if (d.status === 'ok') {
+      apiPill.classList.add('online');
+      apiLabel.textContent = 'API conectat';
+    } else throw new Error();
+  } catch {
+    apiLabel.textContent = 'API offline';
+  }
+}
+
+// ── file picker ────────────────────────────────────
+csvFile.addEventListener('change', () => {
+  const f = csvFile.files[0];
+  fileNameEl.textContent = f ? f.name : 'Niciun fisier selectat';
+  uploadBtn.disabled = !f;
+});
+
+// ── upload ─────────────────────────────────────────
+uploadBtn.addEventListener('click', async () => {
+  const f = csvFile.files[0];
+  if (!f) return;
+
+  setUploadLoading(true);
+  flash('', '');
+  warnBox.classList.remove('show');
+
+  const fd = new FormData();
+  fd.append('file', f);
+
+  try {
+    const r  = await fetch(`${API}/upload-csv`, { method: 'POST', body: fd });
+    const d  = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Eroare necunoscuta');
+
+    flash(`Incarcat cu succes: ${d.clients_found} clienti, saptamana ${d.week}`, 'ok');
+
+    if (d.warnings?.length) {
+      warnList.innerHTML = d.warnings.map(w => `<li>${w}</li>`).join('');
+      warnBox.classList.add('show');
+    }
+
+    await loadClients();
+  } catch (e) {
+    flash(e.message, 'err');
+  } finally {
+    setUploadLoading(false);
+  }
+});
+
+function setUploadLoading(on) {
+  uploadBtn.disabled = on;
+  uploadBtn.innerHTML = on
+    ? '<div class="spinner" style="display:inline-block;width:14px;height:14px;border-width:2px;border-top-color:#fff;border-color:rgba(255,255,255,.3);border-radius:50%;animation:spin .65s linear infinite"></div> Se incarca...'
+    : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Incarca';
+}
+
+function flash(msg, type) {
+  uploadFlash.textContent = msg;
+  uploadFlash.className = `flash${msg ? ` show ${type}` : ''}`;
+}
+
+// ── load clients ───────────────────────────────────
+async function loadClients() {
+  try {
+    const r = await fetch(`${API}/clients`);
+    const d = await r.json();
+    clientsData = d.clients || [];
+    const week  = d.week;
+
+    if (!week || !clientsData.length) {
+      clientsSection.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+      return;
+    }
+
+    weekTag.textContent = week;
+    weekTag.classList.remove('hidden');
+    countTag.textContent = `${clientsData.length} clienti`;
+    countTag.classList.remove('hidden');
+
+    clientsSection.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+    renderCards();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ── render ─────────────────────────────────────────
+function renderCards() {
+  clientList.innerHTML = '';
+  clientsData.forEach(c => clientList.appendChild(makeCard(c)));
+}
+
+function slug(email) {
+  return email.replace(/[^a-z0-9]/gi, '_');
+}
+
+function initials(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+}
+
+function makeCard(c) {
+  const id   = slug(c.email);
+  const done = c.feedback_generated;
+  const days = c.days_submitted;
+
+  const div = document.createElement('div');
+  div.className = `card${done ? ' done' : ''}`;
+  div.dataset.email = c.email;
+
+  div.innerHTML = `
+    <div class="card-head">
+      <div class="avatar">${initials(c.name)}</div>
+      <div class="card-info">
+        <div class="card-name">${esc(c.name)}</div>
+        <div class="card-email">${esc(c.email)}</div>
+      </div>
+      <div class="card-right">
+        <span class="days-badge ${days === 7 ? 'full' : 'partial'}">${days}/7 zile</span>
+        <div class="status-wrap" id="sw-${id}">
+          <svg class="checkmark" id="ck-${id}" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="spinner" id="sp-${id}"></div>
+        </div>
+        <button class="btn btn-outline btn-xs" id="gbtn-${id}" data-email="${esc(c.email)}">
+          ${done ? 'Regenereaza' : 'Genereaza'}
+        </button>
+      </div>
+    </div>
+    <div class="feedback-panel${done ? ' show' : ''}" id="fp-${id}">
+      <div class="feedback-text" id="ft-${id}">Se incarca...</div>
+      <div class="feedback-actions">
+        <button class="btn btn-outline btn-xs" id="cpbtn-${id}" data-email="${esc(c.email)}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copiaza pentru WhatsApp
+        </button>
+        <span class="copy-done" id="cd-${id}">Copiat ✓</span>
+      </div>
+    </div>
+  `;
+
+  // Show existing feedback if done
+  if (done) fetchExisting(c.email);
+
+  div.querySelector(`#gbtn-${id}`).addEventListener('click', () => generate(c.email, false));
+  div.querySelector(`#cpbtn-${id}`).addEventListener('click', () => copyText(c.email));
+
+  // if checkmark should show
+  if (done) {
+    div.querySelector(`#ck-${id}`).style.display = 'block';
+  }
+
+  return div;
+}
+
+// ── fetch existing feedback ────────────────────────
+async function fetchExisting(email) {
+  try {
+    const r = await fetch(`${API}/history/${encodeURIComponent(email)}?weeks=1`);
+    const d = await r.json();
+    const fb = d.history?.[0]?.feedback;
+    if (fb) setFeedbackText(email, fb);
+  } catch { /* silent */ }
+}
+
+// ── generate one ───────────────────────────────────
+async function generate(email, regenerate) {
+  const id = slug(email);
+
+  // spinner on
+  document.getElementById(`sp-${id}`).style.display = 'block';
+  document.getElementById(`ck-${id}`).style.display = 'none';
+  const gbtn = document.getElementById(`gbtn-${id}`);
+  if (gbtn) { gbtn.disabled = true; gbtn.textContent = 'Se genereaza...'; }
+
+  showPanel(email);
+  setFeedbackText(email, 'Se genereaza feedback...');
+
+  try {
+    const r = await fetch(`${API}/feedback/${encodeURIComponent(email)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regenerate }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'Eroare');
+    setFeedbackText(email, d.feedback);
+    markDone(email);
+  } catch (e) {
+    setFeedbackText(email, `Eroare: ${e.message}`);
+    document.getElementById(`sp-${id}`).style.display = 'none';
+    if (gbtn) { gbtn.disabled = false; gbtn.textContent = 'Incearca din nou'; }
+  }
+}
+
+// ── generate all ───────────────────────────────────
+genAllBtn.addEventListener('click', async () => {
+  const pending = clientsData.filter(c => !c.feedback_generated);
+  if (!pending.length) return;
+
+  genAllBtn.disabled = true;
+  refreshBtn.disabled = true;
+  progressWrap.classList.add('show');
+  progressFill.style.width = '0%';
+
+  for (let i = 0; i < pending.length; i++) {
+    progressFill.style.width = `${Math.round(i / pending.length * 100)}%`;
+    await generate(pending[i].email, false);
+    const idx = clientsData.findIndex(x => x.email === pending[i].email);
+    if (idx !== -1) clientsData[idx].feedback_generated = true;
+  }
+
+  progressFill.style.width = '100%';
+  setTimeout(() => {
+    progressWrap.classList.remove('show');
+    progressFill.style.width = '0%';
+  }, 900);
+
+  genAllBtn.disabled = false;
+  refreshBtn.disabled = false;
+});
+
+// ── copy ───────────────────────────────────────────
+function copyText(email) {
+  const id  = slug(email);
+  const el  = document.getElementById(`ft-${id}`);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const cd = document.getElementById(`cd-${id}`);
+    cd.classList.add('show');
+    setTimeout(() => cd.classList.remove('show'), 2200);
+  });
+}
+
+// ── helpers ────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showPanel(email) {
+  document.getElementById(`fp-${slug(email)}`)?.classList.add('show');
+}
+
+function setFeedbackText(email, text) {
+  const el = document.getElementById(`ft-${slug(email)}`);
+  if (el) el.textContent = text;
+}
+
+function markDone(email) {
+  const id   = slug(email);
+  const card = document.querySelector(`.card[data-email="${email}"]`);
+  const ck   = document.getElementById(`ck-${id}`);
+  const sp   = document.getElementById(`sp-${id}`);
+  const gbtn = document.getElementById(`gbtn-${id}`);
+
+  card?.classList.add('done');
+  if (ck) ck.style.display = 'block';
+  if (sp) sp.style.display = 'none';
+  if (gbtn) { gbtn.disabled = false; gbtn.textContent = 'Regenereaza'; }
+  showPanel(email);
+}
+
+// ── refresh ────────────────────────────────────────
+refreshBtn.addEventListener('click', loadClients);
+
+// ── init ───────────────────────────────────────────
+checkHealth();
+loadClients();
+</script>
+</body>
+</html>
